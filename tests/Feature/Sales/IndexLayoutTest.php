@@ -26,5 +26,7 @@ class IndexLayoutTest extends TestCase
         $this->assertStringContainsString('sales-mini-total', $content);
         $this->assertStringContainsString('Entrer : Ajouter au panier', $content);
         $this->assertStringContainsString('search-add-', $content);
+        $this->assertStringContainsString('sales-cart-list', $content);
+        $this->assertStringContainsString('sales-cart-footer', $content);
     }
 }

@@ -293,13 +293,13 @@
                         @error('items') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <div class="app-card-body">
-                        @if (empty($items))
-                            <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-                                Aucun article dans le panier pour le moment.
-                            </div>
-                        @else
-                            <div class="space-y-3 sales-lines">
+                    <div class="app-card-body space-y-4">
+                        <div class="sales-cart-list max-h-[26rem] space-y-3 overflow-y-auto pr-1">
+                            @if (empty($items))
+                                <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                                    Aucun article dans le panier pour le moment.
+                                </div>
+                            @else
                                 @foreach ($items as $index => $item)
                                     @php
                                         $product = $productsById->get($item['product_id']);
@@ -339,10 +339,10 @@
                                         </div>
                                     </div>
                                 @endforeach
-                            </div>
-                        @endif
+                            @endif
+                        </div>
 
-                        <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
+                        <div class="sales-cart-footer flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
                             <div>
                                 <div class="text-xs uppercase tracking-wide text-slate-400">Total provisoire</div>
                                 <div class="text-xl font-semibold text-slate-900">{{ number_format($totals['total'], 2) }} {{ $cartCurrency }}</div>

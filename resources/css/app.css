@@ -461,4 +461,12 @@
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.95));
         backdrop-filter: blur(8px);
     }
+
+    .sales-cart-footer {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        background: rgba(248, 250, 252, 0.95);
+        backdrop-filter: blur(10px);
+    }
 }
