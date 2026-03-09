@@ -216,6 +216,9 @@
                     </div>
                 </div>
 
+            </div>
+
+            <div class="sales-summary space-y-6 lg:order-2">
                 <div class="app-card sales-card">
                     <div class="app-card-header">
                         <div>
@@ -226,11 +229,11 @@
                     </div>
 
                     <div class="app-card-body">
-                                @if (empty($items))
-                                    <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-                                        Aucun article dans le panier pour le moment.
-                                    </div>
-                                @else
+                        @if (empty($items))
+                            <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                                Aucun article dans le panier pour le moment.
+                            </div>
+                        @else
                             <div class="space-y-3 sales-lines">
                                 @foreach ($items as $index => $item)
                                     @php
@@ -290,9 +293,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="sales-summary space-y-6 lg:order-2">
                 <div class="app-card sales-card">
                     <div class="app-card-header">
                         <div>
