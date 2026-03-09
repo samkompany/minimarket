@@ -233,6 +233,26 @@
             </div>
 
             <div class="sales-summary space-y-6 lg:order-2">
+                <div class="sales-mini-total hidden lg:flex">
+                    <div class="min-w-0">
+                        <div class="text-[11px] uppercase tracking-wider text-slate-500">Total panier</div>
+                        <div class="text-lg font-semibold text-slate-900">
+                            {{ number_format($totals['total'], 2) }} {{ $cartCurrency }}
+                        </div>
+                        @if ($hasMixedCurrency)
+                            <div class="text-[11px] font-semibold text-rose-600">Devise unique</div>
+                        @endif
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="submit" class="app-btn-primary" x-on:click="window.__receiptWindow = window.open('about:blank', '_blank');" @disabled($hasMixedCurrency)>
+                            Valider
+                        </button>
+                        <button type="button" wire:click="savePending" class="app-btn-secondary">
+                            Attente
+                        </button>
+                    </div>
+                </div>
+
                 <div class="app-card sales-card">
                     <div class="app-card-header">
                         <div>

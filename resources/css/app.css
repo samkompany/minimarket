@@ -295,6 +295,22 @@
         position: relative;
     }
 
+    .sales-mini-total {
+        position: sticky;
+        top: 5.25rem;
+        z-index: 15;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        border-radius: 1.25rem;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 0.75rem 1rem;
+        box-shadow: 0 10px 30px -24px rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(12px);
+    }
+
     .sales-mobile-bar {
         position: sticky;
         bottom: 0;
@@ -337,6 +353,14 @@
             position: sticky;
             top: 6rem;
             align-self: start;
+        }
+
+        .sales-screen-pos .sales-mini-total {
+            top: 5.75rem;
+        }
+
+        .sales-screen-tablet .sales-mini-total {
+            top: 5.5rem;
         }
     }
 
