@@ -115,14 +115,24 @@
                                 <div class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Raccourcis</div>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach ($favoriteProducts as $product)
-                                        <button type="button" wire:click="selectProduct({{ $product->id }})" class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                                            ★ {{ $product->name }}
-                                        </button>
+                                        <div class="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+                                            <button type="button" wire:click="selectProduct({{ $product->id }})" class="px-1">
+                                                ★ {{ $product->name }}
+                                            </button>
+                                            <button type="button" data-quick-add wire:click="selectProduct({{ $product->id }}); $wire.addToCart();" class="rounded-full border border-amber-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                                                +
+                                            </button>
+                                        </div>
                                     @endforeach
                                     @foreach ($frequentProducts as $product)
-                                        <button type="button" wire:click="selectProduct({{ $product->id }})" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                                            {{ $product->name }}
-                                        </button>
+                                        <div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600">
+                                            <button type="button" wire:click="selectProduct({{ $product->id }})" class="px-1">
+                                                {{ $product->name }}
+                                            </button>
+                                            <button type="button" data-quick-add wire:click="selectProduct({{ $product->id }}); $wire.addToCart();" class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                                                +
+                                            </button>
+                                        </div>
                                     @endforeach
                                 </div>
                             </div>
