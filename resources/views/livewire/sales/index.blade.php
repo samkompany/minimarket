@@ -9,6 +9,9 @@
         if (($event.ctrlKey || $event.metaKey) && ($event.key === 'i' || $event.key === 'I')) { $event.preventDefault(); $wire.addItem(); }
         if ($event.key === 'F2') { $event.preventDefault(); $refs.customer?.focus(); }
         if ($event.key === 'F4') { $event.preventDefault(); $refs.barcode?.focus(); }
+        if (!['INPUT', 'TEXTAREA', 'SELECT'].includes($event.target.tagName) && /^[a-zA-Z]$/.test($event.key)) {
+            $refs.productSearch?.focus();
+        }
     "
     x-on:notify.window="
         $dispatch('toast', { message: $event.detail.message, invoiceId: $event.detail.invoiceId });
