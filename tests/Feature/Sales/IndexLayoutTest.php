@@ -20,11 +20,7 @@ class IndexLayoutTest extends TestCase
 
         $content = $response->getContent();
         $cartPos = strpos($content, '<h3 class="app-card-title">Panier</h3>');
-        $summaryPos = strpos($content, '<h3 class="app-card-title">Resume</h3>');
-
         $this->assertIsInt($cartPos);
-        $this->assertIsInt($summaryPos);
-        $this->assertTrue($cartPos < $summaryPos);
         $this->assertStringContainsString('$refs.productSearch?.focus()', $content);
         $this->assertStringContainsString('article(s)', $content);
         $this->assertStringContainsString('sales-mini-total', $content);

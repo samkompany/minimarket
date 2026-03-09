@@ -363,35 +363,6 @@
                     </div>
                 </div>
 
-                <div class="app-card sales-card">
-                    <div class="app-card-header">
-                        <div>
-                            <h3 class="app-card-title">Resume</h3>
-                            <p class="app-card-subtitle">Totaux en temps reel.</p>
-                        </div>
-                    </div>
-                    <div class="app-card-body space-y-3">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                            <div class="text-xs uppercase tracking-wide text-slate-400">Sous-total</div>
-                            <div class="text-2xl font-semibold text-slate-900">{{ number_format($totals['subtotal'], 2) }} {{ $cartCurrency }}</div>
-                        </div>
-                        <div class="grid gap-3 sm:grid-cols-2">
-                            <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                                <div class="text-xs uppercase tracking-wide text-slate-400">Remise</div>
-                                <div class="text-lg font-semibold text-slate-900">- {{ number_format($totals['discountAmount'], 2) }} {{ $cartCurrency }}</div>
-                            </div>
-                            <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                                <div class="text-xs uppercase tracking-wide text-slate-400">TVA</div>
-                                <div class="text-lg font-semibold text-slate-900">+ {{ number_format($totals['taxAmount'], 2) }} {{ $cartCurrency }}</div>
-                            </div>
-                        </div>
-                        <div class="rounded-xl border border-slate-200 bg-slate-900 px-4 py-3 text-white">
-                            <div class="text-xs uppercase tracking-wide text-white/70">Total a payer</div>
-                            <div class="text-2xl font-semibold">{{ number_format($totals['total'], 2) }} {{ $cartCurrency }}</div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
             <div class="sales-mobile-bar lg:hidden">
