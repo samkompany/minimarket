@@ -23,8 +23,9 @@ class Sales extends Component
     public function mount(): void
     {
         $this->authorizeAccess();
-        $this->startDate = now()->startOfMonth()->format('Y-m-d');
-        $this->endDate = now()->format('Y-m-d');
+        $today = now()->format('Y-m-d');
+        $this->startDate = $today;
+        $this->endDate = $today;
     }
 
     public function updatingStartDate(): void

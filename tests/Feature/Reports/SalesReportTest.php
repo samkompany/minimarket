@@ -28,6 +28,7 @@ class SalesReportTest extends TestCase
         ]);
 
         $soldAt = now()->startOfDay()->addHours(10)->addMinutes(15);
+        $yesterday = now()->subDay()->startOfDay()->addHours(9);
         $sale = Sale::factory()->create([
             'user_id' => $admin->id,
             'reference' => 'SALE-TEST-1',
@@ -42,6 +43,22 @@ class SalesReportTest extends TestCase
             'quantity' => 2,
             'unit_price' => 20,
             'line_total' => 40,
+        ]);
+
+        $yesterdaySale = Sale::factory()->create([
+            'user_id' => $admin->id,
+            'reference' => 'SALE-TEST-OLD',
+            'customer_name' => 'Mario',
+            'status' => 'paid',
+            'sold_at' => $yesterday,
+        ]);
+
+        SaleItem::factory()->create([
+            'sale_id' => $yesterdaySale->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 15,
+            'line_total' => 15,
         ]);
 
         $response = $this->actingAs($admin)->get(route('reports.sales'));
@@ -59,6 +76,7 @@ class SalesReportTest extends TestCase
         $response->assertSee($admin->name);
         $response->assertSee('Total global');
         $response->assertSee('40.00 USD');
+        $response->assertDontSee('SALE-TEST-OLD');
     }
 
     public function test_sales_report_can_export_excel(): void
