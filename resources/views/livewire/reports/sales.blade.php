@@ -9,13 +9,18 @@
     <div class="mx-auto max-w-6xl space-y-8">
         <div class="app-card">
             <div class="app-card-header">
-                <div>
-                    <h3 class="app-card-title">Filtres</h3>
-                    <p class="app-card-subtitle">Choisissez la periode.</p>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="app-card-title">Filtres</h3>
+                        <p class="app-card-subtitle">Choisissez la periode.</p>
+                    </div>
+                    <button type="button" wire:click="exportSales" wire:loading.attr="disabled" wire:target="exportSales" class="app-btn-secondary">
+                        Exporter Excel
+                    </button>
                 </div>
             </div>
             <div class="app-card-body">
-                <div class="grid gap-4 sm:grid-cols-3">
+                <div class="grid gap-4 sm:grid-cols-4">
                     <div>
                         <label class="app-label">Du</label>
                         <input type="date" wire:model.live="startDate" class="app-input" />
@@ -28,6 +33,28 @@
                         <div class="text-xs uppercase tracking-wide text-slate-400">Ventes</div>
                         <div class="text-2xl font-semibold text-slate-900">{{ number_format($salesCount) }}</div>
                         <div class="mt-1 text-xs text-slate-500">{{ number_format($itemsCount) }} articles</div>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
+                        <div class="text-xs uppercase tracking-wide text-slate-400">Total global</div>
+                        @if ($summaryByCurrency->isEmpty())
+                            <div class="text-2xl font-semibold text-slate-900">0</div>
+                        @elseif ($summaryByCurrency->count() === 1)
+                            @php
+                                $summary = $summaryByCurrency->first();
+                            @endphp
+                            <div class="text-2xl font-semibold text-slate-900">
+                                {{ number_format((float) $summary->revenue, 2) }} {{ $summary->currency }}
+                            </div>
+                        @else
+                            <div class="mt-2 space-y-1 text-sm">
+                                @foreach ($summaryByCurrency as $summary)
+                                    <div class="flex items-center justify-between text-slate-700">
+                                        <span>{{ $summary->currency }}</span>
+                                        <span class="font-semibold">{{ number_format((float) $summary->revenue, 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -48,6 +75,67 @@
                     Aucun resultat pour cette periode.
                 </div>
             @endforelse
+        </div>
+
+        <div class="app-card">
+            <div class="app-card-header">
+                <div>
+                    <h3 class="app-card-title">Details des ventes</h3>
+                    <p class="app-card-subtitle">Liste des articles vendus avec quantite, prix unitaire et prix achat.</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="app-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Produit</th>
+                            <th>Client</th>
+                            <th>Qte</th>
+                            <th>PU</th>
+                            <th>PA</th>
+                            <th>Total</th>
+                            <th>Vendeur</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        @forelse ($saleItems as $item)
+                            @php
+                                $currency = $item->product?->currency ?? 'CDF';
+                            @endphp
+                            <tr wire:key="sale-item-{{ $item->id }}">
+                                <td>{{ $item->sale?->sold_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                                <td class="font-semibold text-slate-900">{{ $item->sale?->reference ?? '—' }}</td>
+                                <td>{{ $item->product?->name ?? '—' }}</td>
+                                <td>{{ $item->sale?->customer_name ?? 'Comptoir' }}</td>
+                                <td>{{ number_format((float) $item->quantity) }}</td>
+                                <td>{{ number_format((float) $item->unit_price, 2) }} {{ $currency }}</td>
+                                <td>
+                                    @if ($item->product?->cost_price !== null)
+                                        {{ number_format((float) $item->product->cost_price, 2) }} {{ $currency }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="font-semibold text-slate-900">{{ number_format((float) $item->line_total, 2) }} {{ $currency }}</td>
+                                <td>{{ $item->sale?->user?->name ?? '—' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="px-4 py-6 text-center text-sm text-slate-500">
+                                    Aucune ligne de vente pour cette periode.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="px-6 py-4">
+                {{ $saleItems->links() }}
+            </div>
         </div>
     </div>
 </div>

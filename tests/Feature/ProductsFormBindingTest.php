@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Livewire\Products\Index;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class ProductsFormBindingTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_product_form_uses_simple_wire_model_bindings(): void
     {
         $user = User::factory()->create();

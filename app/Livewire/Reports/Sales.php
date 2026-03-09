@@ -2,13 +2,22 @@
 
 namespace App\Livewire\Reports;
 
+use App\Exports\SalesReportExport;
 use App\Models\Sale;
+use App\Models\SaleItem;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class Sales extends Component
 {
+    use WithPagination;
+
     public ?string $startDate = null;
+
     public ?string $endDate = null;
 
     public function mount(): void
@@ -18,7 +27,33 @@ class Sales extends Component
         $this->endDate = now()->format('Y-m-d');
     }
 
-    public function render()
+    public function updatingStartDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingEndDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function exportSales(): BinaryFileResponse
+    {
+        $this->authorizeAccess();
+        $isAdmin = auth()->user()?->isAdmin() ?? false;
+
+        return Excel::download(
+            new SalesReportExport(
+                $this->startDate,
+                $this->endDate,
+                $isAdmin,
+                auth()->id(),
+            ),
+            'sales-report.xlsx',
+        );
+    }
+
+    public function render(): View
     {
         $this->authorizeAccess();
         $isAdmin = auth()->user()?->isAdmin() ?? false;
@@ -54,10 +89,23 @@ class Sales extends Component
             ->when(! $isAdmin, fn ($q) => $q->where('sales.user_id', auth()->id()))
             ->sum('sale_items.quantity');
 
+        $saleItems = SaleItem::query()
+            ->select('sale_items.*')
+            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->with(['sale.user', 'product'])
+            ->where('sales.status', 'paid')
+            ->when($this->startDate, fn ($q) => $q->whereDate('sales.sold_at', '>=', $this->startDate))
+            ->when($this->endDate, fn ($q) => $q->whereDate('sales.sold_at', '<=', $this->endDate))
+            ->when(! $isAdmin, fn ($q) => $q->where('sales.user_id', auth()->id()))
+            ->orderByDesc('sales.sold_at')
+            ->orderByDesc('sale_items.id')
+            ->paginate(20);
+
         return view('livewire.reports.sales', [
             'summaryByCurrency' => $summaryByCurrency,
             'salesCount' => $salesCount,
             'itemsCount' => $itemsCount,
+            'saleItems' => $saleItems,
         ])->layout('layouts.app');
     }
 
