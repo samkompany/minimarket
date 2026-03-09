@@ -19,20 +19,46 @@
                     </button>
                 </div>
             </div>
-            <div class="app-card-body">
-                <div class="grid gap-4 sm:grid-cols-4">
-                    <div>
+            <div class="app-card-body space-y-4">
+                <div class="flex flex-wrap items-end gap-4">
+                    <div class="w-full sm:w-auto">
                         <label class="app-label">Du</label>
-                        <input type="date" wire:model.live="startDate" class="app-input" />
+                        <input type="date" wire:model.live="startDate" class="app-input sm:w-44" />
                     </div>
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <label class="app-label">Au</label>
-                        <input type="date" wire:model.live="endDate" class="app-input" />
+                        <input type="date" wire:model.live="endDate" class="app-input sm:w-44" />
                     </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
                     <div class="rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
                         <div class="text-xs uppercase tracking-wide text-slate-400">Ventes</div>
                         <div class="text-2xl font-semibold text-slate-900">{{ number_format($salesCount) }}</div>
                         <div class="mt-1 text-xs text-slate-500">{{ number_format($itemsCount) }} articles</div>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
+                        <div class="text-xs uppercase tracking-wide text-slate-400">Depenses</div>
+                        @if ($summaryByCurrency->isEmpty() && $expenseByCurrency->isEmpty())
+                            <div class="text-2xl font-semibold text-slate-900">0</div>
+                        @elseif ($expenseByCurrency->count() === 1)
+                            @php
+                                $currency = $expenseByCurrency->keys()->first();
+                                $expense = (float) ($expenseByCurrency[$currency] ?? 0);
+                            @endphp
+                            <div class="text-2xl font-semibold text-slate-900">
+                                {{ number_format($expense, 2) }} {{ $currency }}
+                            </div>
+                        @else
+                            <div class="mt-2 space-y-1 text-sm">
+                                @foreach ($expenseByCurrency as $currency => $expense)
+                                    <div class="flex items-center justify-between text-slate-700">
+                                        <span>{{ $currency }}</span>
+                                        <span class="font-semibold">{{ number_format((float) $expense, 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                     <div class="rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
                         <div class="text-xs uppercase tracking-wide text-slate-400">Total global</div>
@@ -41,16 +67,34 @@
                         @elseif ($summaryByCurrency->count() === 1)
                             @php
                                 $summary = $summaryByCurrency->first();
+                                $expense = (float) ($expenseByCurrency[$summary->currency] ?? 0);
+                                $balance = (float) $summary->revenue - $expense;
                             @endphp
                             <div class="text-2xl font-semibold text-slate-900">
                                 {{ number_format((float) $summary->revenue, 2) }} {{ $summary->currency }}
                             </div>
+                            <div class="mt-2 text-xs text-slate-500">Depense: {{ number_format($expense, 2) }}</div>
+                            <div class="text-xs font-semibold text-emerald-600">Solde: {{ number_format($balance, 2) }}</div>
                         @else
-                            <div class="mt-2 space-y-1 text-sm">
+                            <div class="mt-2 space-y-1 text-xs">
                                 @foreach ($summaryByCurrency as $summary)
-                                    <div class="flex items-center justify-between text-slate-700">
-                                        <span>{{ $summary->currency }}</span>
-                                        <span class="font-semibold">{{ number_format((float) $summary->revenue, 2) }}</span>
+                                    @php
+                                        $expense = (float) ($expenseByCurrency[$summary->currency] ?? 0);
+                                        $balance = (float) $summary->revenue - $expense;
+                                    @endphp
+                                    <div class="space-y-0.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">
+                                        <div class="flex items-center justify-between text-sm font-semibold">
+                                            <span>{{ $summary->currency }}</span>
+                                            <span>{{ number_format((float) $summary->revenue, 2) }}</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs text-slate-500">
+                                            <span>Depense</span>
+                                            <span>{{ number_format($expense, 2) }}</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs font-semibold text-emerald-600">
+                                            <span>Solde</span>
+                                            <span>{{ number_format($balance, 2) }}</span>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
@@ -62,12 +106,20 @@
 
         <div class="grid gap-4 md:grid-cols-3">
             @forelse ($summaryByCurrency as $summary)
+                @php
+                    $expense = (float) ($expenseByCurrency[$summary->currency] ?? 0);
+                    $balance = (float) $summary->revenue - $expense;
+                @endphp
                 <div class="app-kpi">
                     <div class="app-kpi-label">Chiffre d'affaires ({{ $summary->currency }})</div>
                     <div class="app-kpi-value">{{ number_format((float) $summary->revenue, 2) }}</div>
                     <div class="mt-3 text-xs text-slate-500">Cout: {{ number_format((float) $summary->cost, 2) }}</div>
                     <div class="mt-1 text-sm font-semibold text-emerald-600">
                         Benefice: {{ number_format((float) $summary->profit, 2) }}
+                    </div>
+                    <div class="mt-3 text-xs text-slate-500">Depense: {{ number_format($expense, 2) }}</div>
+                    <div class="mt-1 text-sm font-semibold text-emerald-700">
+                        Solde: {{ number_format($balance, 2) }}
                     </div>
                 </div>
             @empty

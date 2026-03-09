@@ -75,6 +75,16 @@ class Sales extends Component
 
         $summaryByCurrency = $summaryQuery->get();
 
+        $expenseByCurrency = DB::table('expense_payments')
+            ->join('expenses', 'expenses.id', '=', 'expense_payments.expense_id')
+            ->when($this->startDate, fn ($q) => $q->whereDate('expense_payments.paid_at', '>=', $this->startDate))
+            ->when($this->endDate, fn ($q) => $q->whereDate('expense_payments.paid_at', '<=', $this->endDate))
+            ->selectRaw("COALESCE(expenses.currency, 'CDF') as currency")
+            ->selectRaw('SUM(expense_payments.amount) as expense')
+            ->groupBy('currency')
+            ->orderBy('currency')
+            ->pluck('expense', 'currency');
+
         $salesCount = Sale::query()
             ->where('status', 'paid')
             ->when($this->startDate, fn ($q) => $q->whereDate('sold_at', '>=', $this->startDate))
@@ -104,6 +114,7 @@ class Sales extends Component
 
         return view('livewire.reports.sales', [
             'summaryByCurrency' => $summaryByCurrency,
+            'expenseByCurrency' => $expenseByCurrency,
             'salesCount' => $salesCount,
             'itemsCount' => $itemsCount,
             'saleItems' => $saleItems,
