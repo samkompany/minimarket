@@ -28,5 +28,6 @@ class IndexLayoutTest extends TestCase
         $this->assertStringContainsString('$refs.productSearch?.focus()', $content);
         $this->assertStringContainsString('article(s)', $content);
         $this->assertStringContainsString('sales-mini-total', $content);
+        $this->assertStringContainsString('Entrer : Ajouter au panier', $content);
     }
 }

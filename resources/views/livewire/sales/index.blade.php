@@ -73,7 +73,10 @@
     </x-slot>
 
     <div class="sales-shortcuts">
-        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Raccourcis clavier</div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Raccourcis clavier</div>
+            <div class="text-xs font-semibold text-slate-500">Entrer : Ajouter au panier</div>
+        </div>
         <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
             <span class="rounded-full border border-slate-200 bg-white px-3 py-1">Ctrl + Enter : Valider</span>
             <span class="rounded-full border border-slate-200 bg-white px-3 py-1">Ctrl + Shift + Enter : Attente</span>
@@ -179,7 +182,7 @@
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div class="sm:col-span-2">
                                     <label class="app-label">Produit</label>
-                                    <select wire:model.live="selectedProductId" class="app-select">
+                                    <select wire:model.live="selectedProductId" class="app-select" x-on:keydown.enter.prevent="$wire.addToCart()">
                                         <option value="">Selectionner</option>
                                         @foreach ($products as $product)
                                             <option value="{{ $product->id }}">
@@ -195,7 +198,7 @@
                                     <button type="button" wire:click="decrementSelectedQuantity" class="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-semibold text-slate-600 hover:bg-slate-50">
                                         -
                                     </button>
-                                    <input type="number" min="1" wire:model.live="selectedQuantity" class="app-input" />
+                                    <input type="number" min="1" wire:model.live="selectedQuantity" class="app-input" x-on:keydown.enter.prevent="$wire.addToCart()" />
                                     <button type="button" wire:click="incrementSelectedQuantity" class="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-semibold text-slate-600 hover:bg-slate-50">
                                         +
                                     </button>
@@ -215,11 +218,11 @@
 
                             <div>
                                 <label class="app-label">Remise %</label>
-                                <input type="number" min="0" max="100" step="0.01" wire:model.live="selectedDiscountRate" class="app-input" />
+                                <input type="number" min="0" max="100" step="0.01" wire:model.live="selectedDiscountRate" class="app-input" x-on:keydown.enter.prevent="$wire.addToCart()" />
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2 sales-add-actions">
                             <button type="button" wire:click="addToCart" class="app-btn-primary">
                                 Ajouter au panier
                             </button>
