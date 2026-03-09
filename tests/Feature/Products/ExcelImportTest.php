@@ -23,7 +23,8 @@ class ExcelImportTest extends TestCase
         ]);
 
         $product = Product::factory()->create([
-            'sku' => 'SKU-100',
+            'name' => 'Produit Test',
+            'sku' => null,
             'sale_price' => 10,
         ]);
 
@@ -31,7 +32,7 @@ class ExcelImportTest extends TestCase
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->fromArray([
             ['name', 'sku', 'sale_price', 'stock_quantity', 'currency'],
-            ['Produit Test', 'SKU-100', 25.5, 12, 'CDF'],
+            ['Produit Test', null, 25.5, 12, 'CDF'],
         ]);
 
         $path = sys_get_temp_dir().'/products-import.xlsx';
@@ -44,6 +45,7 @@ class ExcelImportTest extends TestCase
             ->test(Index::class)
             ->set('importExcelFile', $file)
             ->set('importCreateMissing', false)
+            ->set('importMatchByName', true)
             ->call('importProductsExcel')
             ->assertSet('importedCount', 1);
 

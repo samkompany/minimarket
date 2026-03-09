@@ -67,6 +67,10 @@
                             <input type="checkbox" wire:model="importCreateMissing" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
                             Creer les produits manquants
                         </label>
+                        <label class="flex items-center gap-2 text-sm text-slate-600">
+                            <input type="checkbox" wire:model="importMatchByName" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
+                            Associer par nom si SKU/Code-barres absent
+                        </label>
                         <button type="submit" class="app-btn-primary">Importer Excel</button>
                     </form>
 
@@ -85,6 +89,10 @@
                             </ul>
                         </div>
                     @endif
+
+                    <p class="text-xs text-slate-500">
+                        Les produits absents du fichier Excel ne sont pas modifies.
+                    </p>
                 </div>
             </div>
         @endif

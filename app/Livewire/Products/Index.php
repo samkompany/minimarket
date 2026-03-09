@@ -64,6 +64,8 @@ class Index extends Component
 
     public bool $importCreateMissing = false;
 
+    public bool $importMatchByName = true;
+
     protected $queryString = [
         'search' => ['except' => ''],
     ];
@@ -347,10 +349,10 @@ class Index extends Component
                 }
 
                 $categoryId = $this->resolveCategoryId($data);
-                $product = $this->findExistingProduct($data);
+                $product = $this->findExistingProduct($data, $this->importMatchByName);
 
                 if (! $product && ! $this->importCreateMissing) {
-                    $this->importErrors[] = "Ligne {$lineNumber}: produit introuvable (SKU ou code-barres requis).";
+                    $this->importErrors[] = "Ligne {$lineNumber}: produit introuvable (sku, code-barres ou nom).";
                     $this->skippedCount++;
 
                     continue;
@@ -696,7 +698,7 @@ class Index extends Component
         return null;
     }
 
-    private function findExistingProduct(array $data): ?Product
+    private function findExistingProduct(array $data, bool $matchByName = false): ?Product
     {
         $sku = $data['sku'] ?? null;
         if ($sku) {
@@ -706,6 +708,13 @@ class Index extends Component
         $barcode = $data['barcode'] ?? null;
         if ($barcode) {
             return Product::query()->where('barcode', $barcode)->first();
+        }
+
+        if ($matchByName) {
+            $name = $data['name'] ?? null;
+            if ($name) {
+                return Product::query()->where('name', $name)->first();
+            }
         }
 
         return null;
