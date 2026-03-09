@@ -371,6 +371,13 @@ class Index extends Component
                     'reorder_qty' => $data['reorder_qty'],
                 ];
 
+                if (! $this->canApplyBarcodeUpdate($data['barcode'], $product)) {
+                    $this->importErrors[] = "Ligne {$lineNumber}: code-barres deja utilise par un autre produit.";
+                    $this->skippedCount++;
+
+                    continue;
+                }
+
                 if ($product) {
                     $product->update($payload);
                 } else {
@@ -632,8 +639,8 @@ class Index extends Component
         }
 
         $data['currency'] = $currency ?: 'CDF';
-        $data['sku'] = $data['sku'] ?? null;
-        $data['barcode'] = $data['barcode'] ?? null;
+        $data['sku'] = $this->normalizeIdentifier($data['sku'] ?? null);
+        $data['barcode'] = $this->normalizeIdentifier($data['barcode'] ?? null);
         $data['unit'] = $data['unit'] ?? null;
 
         $data['cost_price'] = $this->parseNumber($data['cost_price'] ?? null, false, $errors, $lineNumber, 'prix_achat');
@@ -718,6 +725,38 @@ class Index extends Component
         }
 
         return null;
+    }
+
+    private function canApplyBarcodeUpdate(?string $barcode, ?Product $product): bool
+    {
+        if (! $barcode) {
+            return true;
+        }
+
+        $query = Product::query()->where('barcode', $barcode);
+        if ($product) {
+            $query->whereKeyNot($product->id);
+        }
+
+        return ! $query->exists();
+    }
+
+    private function normalizeIdentifier($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            $numeric = (float) $value;
+            if ($numeric === (float) (int) $numeric) {
+                return (string) (int) $numeric;
+            }
+        }
+
+        $string = trim((string) $value);
+
+        return $string === '' ? null : $string;
     }
 
     private function loadExcelRows(): Collection
