@@ -228,6 +228,11 @@
                             <h3 class="app-card-title">Panier</h3>
                             <p class="app-card-subtitle">Recap des articles choisis.</p>
                         </div>
+                        <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                            <span class="rounded-full border border-slate-200 bg-white px-2.5 py-1">
+                                {{ count($items) }} article(s)
+                            </span>
+                        </div>
                         @error('items') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
@@ -245,10 +250,15 @@
                                         $lineDiscount = $lineBase * (((float) ($item['discount_rate'] ?? 0)) / 100);
                                         $lineTotal = $lineBase - $lineDiscount;
                                     @endphp
-                                    <div class="sales-line flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+                                    <div class="sales-line group flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition">
                                         <div class="min-w-0">
-                                            <div class="text-sm font-semibold text-slate-900">{{ $product?->name ?? 'Produit' }}</div>
-                                            <div class="mt-1 text-xs text-slate-500">
+                                            <div class="flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-900">
+                                                <span>{{ $product?->name ?? 'Produit' }}</span>
+                                                <span class="text-xs font-semibold text-emerald-700">
+                                                    {{ number_format($lineTotal, 2) }} {{ $product?->currency ?? 'CDF' }}
+                                                </span>
+                                            </div>
+                                            <div class="mt-1 hidden text-xs text-slate-500 group-hover:block">
                                                 PU {{ number_format((float) ($item['unit_price'] ?? 0), 2) }} {{ $product?->currency ?? 'CDF' }}
                                                 · Remise {{ number_format((float) ($item['discount_rate'] ?? 0), 2) }}%
                                             </div>
@@ -265,8 +275,6 @@
                                         </div>
 
                                         <div class="text-right">
-                                            <div class="text-xs uppercase tracking-wide text-slate-400">Total</div>
-                                            <div class="text-base font-semibold text-slate-900">{{ number_format($lineTotal, 2) }} {{ $product?->currency ?? 'CDF' }}</div>
                                             <button type="button" wire:click="removeItem({{ $index }})" class="text-xs font-semibold text-rose-600 hover:text-rose-700">
                                                 Retirer
                                             </button>

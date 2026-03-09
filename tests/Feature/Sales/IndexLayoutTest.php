@@ -26,5 +26,6 @@ class IndexLayoutTest extends TestCase
         $this->assertIsInt($summaryPos);
         $this->assertTrue($cartPos < $summaryPos);
         $this->assertStringContainsString('$refs.productSearch?.focus()', $content);
+        $this->assertStringContainsString('article(s)', $content);
     }
 }
