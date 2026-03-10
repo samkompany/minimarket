@@ -210,6 +210,17 @@
                         <input type="checkbox" wire:model="showArchived" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
                         Afficher archives
                     </label>
+                    <select wire:model.live="sort" class="app-select sm:max-w-xs">
+                        <option value="smart">Tri intelligent</option>
+                        <option value="stock">Stock</option>
+                        <option value="updated">Derniere MAJ</option>
+                        <option value="price">Prix vente</option>
+                        <option value="name">Nom</option>
+                    </select>
+                    <select wire:model.live="direction" class="app-select sm:max-w-xs">
+                        <option value="asc">Asc</option>
+                        <option value="desc">Desc</option>
+                    </select>
                     <input type="text" wire:model.debounce.300ms="search" placeholder="Rechercher..." class="app-input sm:max-w-xs" />
                 </div>
             </div>

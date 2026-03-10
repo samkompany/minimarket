@@ -48,6 +48,10 @@ class Index extends Component
 
     public string $search = '';
 
+    public string $sort = 'smart';
+
+    public string $direction = 'asc';
+
     public string $deleteError = '';
 
     public bool $showArchived = false;
@@ -100,6 +104,16 @@ class Index extends Component
     }
 
     public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSort(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDirection(): void
     {
         $this->resetPage();
     }
@@ -526,18 +540,45 @@ class Index extends Component
     public function render()
     {
         $this->authorizeAccess();
-        $products = Product::query()
+        $productsQuery = Product::query()
+            ->select('products.*')
             ->with(['category', 'stock'])
-            ->whereNull('archived_at')
+            ->leftJoin('stocks', 'stocks.product_id', '=', 'products.id')
+            ->whereNull('products.archived_at')
             ->when($this->search !== '', function ($query) {
                 $query->where(function ($subQuery) {
-                    $subQuery->where('name', 'like', '%'.$this->search.'%')
-                        ->orWhere('sku', 'like', '%'.$this->search.'%')
-                        ->orWhere('barcode', 'like', '%'.$this->search.'%');
+                    $subQuery->where('products.name', 'like', '%'.$this->search.'%')
+                        ->orWhere('products.sku', 'like', '%'.$this->search.'%')
+                        ->orWhere('products.barcode', 'like', '%'.$this->search.'%');
                 });
-            })
-            ->orderBy('name')
-            ->paginate(10);
+            });
+
+        $direction = $this->direction === 'desc' ? 'desc' : 'asc';
+        switch ($this->sort) {
+            case 'stock':
+                $productsQuery->orderByRaw('COALESCE(stocks.quantity, 0) '.$direction)
+                    ->orderBy('products.name');
+                break;
+            case 'updated':
+                $productsQuery->orderBy('products.updated_at', $direction)
+                    ->orderBy('products.name');
+                break;
+            case 'price':
+                $productsQuery->orderByRaw('COALESCE(products.sale_price, 0) '.$direction)
+                    ->orderBy('products.name');
+                break;
+            case 'name':
+                $productsQuery->orderBy('products.name', $direction);
+                break;
+            case 'smart':
+            default:
+                $productsQuery->orderByRaw('CASE WHEN COALESCE(stocks.quantity, 0) <= COALESCE(products.min_stock, 0) THEN 0 WHEN COALESCE(stocks.quantity, 0) <= COALESCE(products.min_stock, 0) + 5 THEN 1 ELSE 2 END')
+                    ->orderByRaw('COALESCE(stocks.quantity, 0)')
+                    ->orderBy('products.name');
+                break;
+        }
+
+        $products = $productsQuery->paginate(10);
 
         $archivedProducts = collect();
         if ($this->showArchived) {
