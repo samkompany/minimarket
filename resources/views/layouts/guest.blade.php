@@ -5,7 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        @php $appName = \App\Models\AppSetting::get('app_name', config('app.name', 'miniMaket')); @endphp
+        <title>{{ $appName }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -22,7 +23,7 @@
                         <x-application-logo class="h-16 w-16 fill-current text-white/90" />
                         <div>
                             <div class="text-sm font-semibold uppercase tracking-widest text-white/70">Plateforme</div>
-                            <div class="text-3xl font-semibold">{{ config('app.name', 'Laravel') }}</div>
+                            <div class="text-3xl font-semibold">{{ $appName }}</div>
                         </div>
                     </div>
                     <p class="mt-6 max-w-md text-sm text-white/70">

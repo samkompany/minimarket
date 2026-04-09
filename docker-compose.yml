@@ -1,0 +1,114 @@
+# =============================================================================
+# docker-compose.yml — Minimarket
+# =============================================================================
+#
+# Démarre 4 services interconnectés :
+#
+#   nginx   → Serveur web (port 8080 par défaut), sert les fichiers statiques
+#             et redirige les requêtes PHP vers php-fpm (service app)
+#
+#   app     → PHP-FPM 8.3 — exécute le code Laravel/Livewire
+#             Monte le code source en volume pour refléter les changements
+#             sans rebuild en développement
+#
+#   queue   → Worker Laravel (php artisan queue:listen)
+#             Même image que app, mais destiné uniquement aux jobs en arrière-plan
+#             (exports Excel, envois d'emails, etc.)
+#
+#   mysql   → Base de données MySQL 8 avec healthcheck
+#             Les données sont persistées dans un volume nommé (mysql-data)
+#
+# Usage rapide :
+#   cp .env.docker .env
+#   docker compose build
+#   docker compose up -d
+#   docker compose exec app php artisan key:generate
+#
+# L'application sera disponible sur http://localhost:8080
+# =============================================================================
+
+services:
+
+  # ── Nginx : reverse proxy + fichiers statiques ─────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      # APP_PORT peut être surchargé dans .env (ex: APP_PORT=80)
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      # Partage du code source pour servir les assets (public/)
+      - .:/var/www
+      # Configuration Nginx spécifique à Laravel (try_files, fastcgi_pass, etc.)
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  # ── App : PHP-FPM (cœur de l'application Laravel) ─────────────────────────
+  app:
+    build:
+      context: .
+      target: app          # Correspond au stage "app" dans le Dockerfile
+    volumes:
+      # En développement : le code est monté en live (pas besoin de rebuild)
+      - .:/var/www
+      # Volume séparé pour vendor/ : évite d'écraser le dossier compilé
+      # dans l'image par un dossier vide de l'hôte Windows
+      - vendor:/var/www/vendor
+    env_file:
+      - .env               # Variables d'environnement Laravel (.env.docker → .env)
+    depends_on:
+      mysql:
+        condition: service_healthy   # Attend que MySQL soit prêt avant de démarrer
+    restart: unless-stopped
+
+  # ── Queue : worker pour les jobs asynchrones ───────────────────────────────
+  queue:
+    build:
+      context: .
+      target: app
+    # Remplace la commande PHP-FPM par le worker de queue
+    # --tries=3    : 3 tentatives avant de marquer un job comme échoué
+    # --timeout=90 : un job ne peut pas dépasser 90 secondes
+    command: php artisan queue:listen --tries=3 --timeout=90
+    volumes:
+      - .:/var/www
+      - vendor:/var/www/vendor
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── MySQL 8 : base de données principale ───────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-minimarket}    # Nom de la base de données
+      MYSQL_USER: ${DB_USERNAME:-minimarket}        # Utilisateur applicatif
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}        # Mot de passe applicatif
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}   # Mot de passe root (dev uniquement)
+    volumes:
+      # Persistance des données entre les redémarrages du conteneur
+      - mysql-data:/var/lib/mysql
+    ports:
+      # Permet de se connecter depuis un client SQL sur l'hôte (ex: TablePlus, DBeaver)
+      # DB_PORT_FORWARD=3307 si le port 3306 est déjà utilisé sur la machine
+      - "${DB_PORT_FORWARD:-3306}:3306"
+    healthcheck:
+      # Vérifie que MySQL accepte les connexions avant que l'app démarre
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-secret}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+
+# =============================================================================
+# Volumes nommés (persistants entre `docker compose down` et `up`)
+# =============================================================================
+volumes:
+  # Données MySQL — à ne PAS supprimer sans sauvegarder d'abord !
+  mysql-data:
+  # Dépendances PHP installées dans l'image — partagées entre app et queue
+  vendor:

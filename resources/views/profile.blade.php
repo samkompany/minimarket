@@ -8,6 +8,14 @@
 
     <div class="space-y-6">
         <div class="mx-auto max-w-6xl space-y-6">
+            @if (auth()->user()->isAdmin())
+                <div class="app-card p-6">
+                    <div class="max-w-xl">
+                        <livewire:profile.app-settings-form />
+                    </div>
+                </div>
+            @endif
+
             <div class="app-card p-6">
                 <div class="max-w-xl">
                     <livewire:profile.update-profile-information-form />
