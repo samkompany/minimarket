@@ -215,13 +215,24 @@
                                     </select>
                                 </div>
 
+                            @php $selectedIsByWeight = $selectedProductId ? ($productsById->get($selectedProductId)?->sold_by_weight ?? false) : false; @endphp
                             <div>
-                                <label class="app-label">Quantite</label>
+                                <label class="app-label">
+                                    Quantite
+                                    @if ($selectedIsByWeight)
+                                        <span class="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">kg</span>
+                                    @endif
+                                </label>
                                 <div class="flex items-center gap-2">
                                     <button type="button" wire:click="decrementSelectedQuantity" class="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-semibold text-slate-600 hover:bg-slate-50">
                                         -
                                     </button>
-                                    <input type="number" min="1" wire:model.live="selectedQuantity" class="app-input" x-on:keydown.enter.prevent="$wire.addToCart()" />
+                                    <input type="number"
+                                        min="{{ $selectedIsByWeight ? '0.001' : '1' }}"
+                                        step="{{ $selectedIsByWeight ? '0.001' : '1' }}"
+                                        wire:model.live="selectedQuantity"
+                                        class="app-input"
+                                        x-on:keydown.enter.prevent="$wire.addToCart()" />
                                     <button type="button" wire:click="incrementSelectedQuantity" class="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-semibold text-slate-600 hover:bg-slate-50">
                                         +
                                     </button>
@@ -303,7 +314,8 @@
                                 @foreach ($items as $index => $item)
                                     @php
                                         $product = $productsById->get($item['product_id']);
-                                        $lineBase = ((int) ($item['quantity'] ?? 0)) * ((float) ($item['unit_price'] ?? 0));
+                                        $isByWeight = $product?->sold_by_weight ?? false;
+                                        $lineBase = ((float) ($item['quantity'] ?? 0)) * ((float) ($item['unit_price'] ?? 0));
                                         $lineDiscount = $lineBase * (((float) ($item['discount_rate'] ?? 0)) / 100);
                                         $lineTotal = $lineBase - $lineDiscount;
                                     @endphp
@@ -312,12 +324,15 @@
                                         <div class="min-w-0">
                                             <div class="flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-900">
                                                 <span>{{ $product?->name ?? 'Produit' }}</span>
+                                                @if ($isByWeight)
+                                                    <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">kg</span>
+                                                @endif
                                                 <span class="text-xs font-semibold text-emerald-700">
                                                     {{ number_format($lineTotal, 2) }} {{ $product?->currency ?? 'CDF' }}
                                                 </span>
                                             </div>
                                             <div class="mt-1 hidden text-xs text-slate-500 group-hover:block">
-                                                PU {{ number_format((float) ($item['unit_price'] ?? 0), 2) }} {{ $product?->currency ?? 'CDF' }}
+                                                PU {{ number_format((float) ($item['unit_price'] ?? 0), 2) }} {{ $product?->currency ?? 'CDF' }}{{ $isByWeight ? '/kg' : '' }}
                                                 · Remise {{ number_format((float) ($item['discount_rate'] ?? 0), 2) }}%
                                             </div>
                                         </div>
@@ -326,7 +341,11 @@
                                             <button type="button" wire:click="decrementQuantity({{ $index }})" class="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-semibold text-slate-600 hover:bg-slate-50">
                                                 -
                                             </button>
-                                            <input type="number" min="1" wire:model.live="items.{{ $index }}.quantity" class="app-input w-20" />
+                                            <input type="number"
+                                                min="{{ $isByWeight ? '0.001' : '1' }}"
+                                                step="{{ $isByWeight ? '0.001' : '1' }}"
+                                                wire:model.live="items.{{ $index }}.quantity"
+                                                class="app-input w-20" />
                                             <button type="button" wire:click="incrementQuantity({{ $index }})" class="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-semibold text-slate-600 hover:bg-slate-50">
                                                 +
                                             </button>

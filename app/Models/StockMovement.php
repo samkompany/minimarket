@@ -16,6 +16,7 @@ class StockMovement extends Model
     ];
 
     protected $casts = [
+        'quantity' => 'decimal:3',
         'occurred_at' => 'datetime',
     ];
 

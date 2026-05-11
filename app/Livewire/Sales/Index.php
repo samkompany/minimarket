@@ -43,7 +43,7 @@ class Index extends Component
 
     public ?int $selectedProductId = null;
 
-    public int $selectedQuantity = 1;
+    public float $selectedQuantity = 1;
 
     public float $selectedDiscountRate = 0;
 
@@ -56,7 +56,7 @@ class Index extends Component
             'sold_at' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.discount_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'discountRate' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -107,7 +107,9 @@ class Index extends Component
     public function selectProduct(int $productId): void
     {
         $this->selectedProductId = $productId;
-        $this->selectedQuantity = max(1, (int) $this->selectedQuantity);
+        $product = Product::query()->select(['id', 'sold_by_weight'])->find($productId);
+        $minQty = $product?->sold_by_weight ? 0.001 : 1;
+        $this->selectedQuantity = max($minQty, (float) $this->selectedQuantity);
         $this->selectedDiscountRate = (float) $this->selectedDiscountRate;
         $this->selectedUnitPrice = Product::query()
             ->whereKey($productId)
@@ -124,16 +126,15 @@ class Index extends Component
             ]);
         }
 
-        $quantity = max(1, (int) $this->selectedQuantity);
+        $product = Product::query()->select(['id', 'sold_by_weight', 'promo_price', 'sale_price'])->find($this->selectedProductId);
+        $minQty = $product?->sold_by_weight ? 0.001 : 1;
+        $quantity = max($minQty, (float) $this->selectedQuantity);
         $discountRate = max(0, min(100, (float) $this->selectedDiscountRate));
-        $price = Product::query()
-            ->whereKey($this->selectedProductId)
-            ->value(DB::raw('COALESCE(promo_price, sale_price)'));
-        $price = (float) ($price ?? 0);
+        $price = $product?->promo_price !== null ? (float) $product->promo_price : (float) ($product?->sale_price ?? 0);
 
         foreach ($this->items as $index => $item) {
             if ((int) ($item['product_id'] ?? 0) === (int) $this->selectedProductId) {
-                $this->items[$index]['quantity'] = ((int) ($item['quantity'] ?? 0)) + $quantity;
+                $this->items[$index]['quantity'] = ((float) ($item['quantity'] ?? 0)) + $quantity;
                 $this->items[$index]['unit_price'] = $price;
                 $this->items[$index]['discount_rate'] = $discountRate;
                 $this->resetSelectedItem();
@@ -156,12 +157,27 @@ class Index extends Component
 
     public function incrementSelectedQuantity(): void
     {
-        $this->selectedQuantity = max(1, (int) $this->selectedQuantity) + 1;
+        $step = $this->selectedProductIsSoldByWeight() ? 0.1 : 1;
+        $min = $this->selectedProductIsSoldByWeight() ? 0.001 : 1;
+        $this->selectedQuantity = round(max($min, (float) $this->selectedQuantity) + $step, 3);
     }
 
     public function decrementSelectedQuantity(): void
     {
-        $this->selectedQuantity = max(1, (int) $this->selectedQuantity - 1);
+        $step = $this->selectedProductIsSoldByWeight() ? 0.1 : 1;
+        $min = $this->selectedProductIsSoldByWeight() ? 0.001 : 1;
+        $this->selectedQuantity = round(max($min, (float) $this->selectedQuantity - $step), 3);
+    }
+
+    private function selectedProductIsSoldByWeight(): bool
+    {
+        if (! $this->selectedProductId) {
+            return false;
+        }
+
+        return (bool) Product::query()
+            ->whereKey($this->selectedProductId)
+            ->value('sold_by_weight');
     }
 
     public function resetSelectedItemForm(): void
@@ -199,7 +215,10 @@ class Index extends Component
 
         if ($productId) {
             if ((int) $this->selectedProductId === (int) $productId) {
-                $this->selectedQuantity = max(1, (int) $this->selectedQuantity) + 1;
+                $isByWeight = (bool) Product::query()->whereKey($productId)->value('sold_by_weight');
+                $step = $isByWeight ? 0.1 : 1;
+                $min = $isByWeight ? 0.001 : 1;
+                $this->selectedQuantity = round(max($min, (float) $this->selectedQuantity) + $step, 3);
             } else {
                 $this->selectProduct((int) $productId);
             }
@@ -252,7 +271,10 @@ class Index extends Component
             return;
         }
 
-        $this->items[$index]['quantity'] = ((int) ($this->items[$index]['quantity'] ?? 0)) + 1;
+        $isByWeight = $this->itemIsSoldByWeight($index);
+        $step = $isByWeight ? 0.1 : 1;
+        $min = $isByWeight ? 0.001 : 1;
+        $this->items[$index]['quantity'] = round(max($min, (float) ($this->items[$index]['quantity'] ?? 0)) + $step, 3);
         $this->dispatch('focus-barcode');
     }
 
@@ -262,9 +284,22 @@ class Index extends Component
             return;
         }
 
-        $current = (int) ($this->items[$index]['quantity'] ?? 1);
-        $this->items[$index]['quantity'] = max(1, $current - 1);
+        $isByWeight = $this->itemIsSoldByWeight($index);
+        $step = $isByWeight ? 0.1 : 1;
+        $min = $isByWeight ? 0.001 : 1;
+        $current = (float) ($this->items[$index]['quantity'] ?? $min);
+        $this->items[$index]['quantity'] = round(max($min, $current - $step), 3);
         $this->dispatch('focus-barcode');
+    }
+
+    private function itemIsSoldByWeight(int $index): bool
+    {
+        $productId = $this->items[$index]['product_id'] ?? null;
+        if (! $productId) {
+            return false;
+        }
+
+        return (bool) Product::query()->whereKey($productId)->value('sold_by_weight');
     }
 
     public function resetForm(): void
@@ -304,7 +339,7 @@ class Index extends Component
     {
         $subtotal = 0;
         foreach ($items as $item) {
-            $quantity = (int) ($item['quantity'] ?? 0);
+            $quantity = (float) ($item['quantity'] ?? 0);
             $price = (float) ($item['unit_price'] ?? 0);
             $lineBase = $quantity * $price;
             $lineDiscountRate = (float) ($item['discount_rate'] ?? 0);
@@ -480,7 +515,7 @@ class Index extends Component
         $this->items = $sale->items->map(function ($item) {
             return [
                 'product_id' => $item->product_id,
-                'quantity' => (int) $item->quantity,
+                'quantity' => (float) $item->quantity,
                 'unit_price' => (float) $item->unit_price,
                 'discount_rate' => (float) ($item->discount_rate ?? 0),
             ];

@@ -20,6 +20,7 @@ class Product extends Model
         'barcode',
         'image_url',
         'unit',
+        'sold_by_weight',
         'cost_price',
         'sale_price',
         'promo_label',
@@ -31,11 +32,12 @@ class Product extends Model
     ];
 
     protected $casts = [
+        'sold_by_weight' => 'boolean',
         'promo_price' => 'decimal:2',
         'sale_price' => 'decimal:2',
         'cost_price' => 'decimal:2',
-        'min_stock' => 'integer',
-        'reorder_qty' => 'integer',
+        'min_stock' => 'decimal:3',
+        'reorder_qty' => 'decimal:3',
         'archived_at' => 'datetime',
     ];
 

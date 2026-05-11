@@ -34,17 +34,19 @@ class Index extends Component
 
     public ?string $unit = null;
 
+    public bool $sold_by_weight = false;
+
     public ?float $cost_price = null;
 
     public ?float $sale_price = null;
 
     public string $currency = 'CDF';
 
-    public int $stock_quantity = 0;
+    public float $stock_quantity = 0;
 
-    public int $min_stock = 0;
+    public float $min_stock = 0;
 
-    public int $reorder_qty = 0;
+    public float $reorder_qty = 0;
 
     public string $search = '';
 
@@ -94,12 +96,13 @@ class Index extends Component
                 Rule::unique('products', 'barcode')->ignore($this->productId),
             ],
             'unit' => ['nullable', 'string', 'max:50'],
+            'sold_by_weight' => ['boolean'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
             'sale_price' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['required', 'string', 'size:3', Rule::in(['CDF', 'USD', 'EUR'])],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
-            'min_stock' => ['required', 'integer', 'min:0'],
-            'reorder_qty' => ['required', 'integer', 'min:0'],
+            'stock_quantity' => ['required', 'numeric', 'min:0'],
+            'min_stock' => ['required', 'numeric', 'min:0'],
+            'reorder_qty' => ['required', 'numeric', 'min:0'],
         ];
     }
 
@@ -135,12 +138,13 @@ class Index extends Component
         $this->sku = $product->sku;
         $this->barcode = $product->barcode;
         $this->unit = $product->unit;
+        $this->sold_by_weight = (bool) $product->sold_by_weight;
         $this->cost_price = $product->cost_price;
         $this->sale_price = $product->sale_price;
         $this->currency = $product->currency ?? 'CDF';
-        $this->stock_quantity = $product->stock?->quantity ?? 0;
-        $this->min_stock = $product->min_stock ?? 0;
-        $this->reorder_qty = $product->reorder_qty ?? 0;
+        $this->stock_quantity = (float) ($product->stock?->quantity ?? 0);
+        $this->min_stock = (float) ($product->min_stock ?? 0);
+        $this->reorder_qty = (float) ($product->reorder_qty ?? 0);
     }
 
     public function resetForm(): void
@@ -153,6 +157,7 @@ class Index extends Component
             'sku',
             'barcode',
             'unit',
+            'sold_by_weight',
             'cost_price',
             'sale_price',
             'currency',
@@ -176,6 +181,7 @@ class Index extends Component
                 'sku' => $validated['sku'],
                 'barcode' => $validated['barcode'],
                 'unit' => $validated['unit'],
+                'sold_by_weight' => $validated['sold_by_weight'],
                 'cost_price' => $validated['cost_price'],
                 'sale_price' => $validated['sale_price'],
                 'currency' => $validated['currency'],
@@ -738,9 +744,9 @@ class Index extends Component
 
         $data['cost_price'] = $this->parseNumber($data['cost_price'] ?? null, false, $errors, $lineNumber, 'prix_achat');
         $data['sale_price'] = $this->parseNumber($data['sale_price'] ?? null, false, $errors, $lineNumber, 'prix_vente');
-        $data['stock_quantity'] = $this->parseNumber($data['stock_quantity'] ?? null, true, $errors, $lineNumber, 'stock');
-        $data['min_stock'] = $this->parseNumber($data['min_stock'] ?? null, true, $errors, $lineNumber, 'seuil');
-        $data['reorder_qty'] = $this->parseNumber($data['reorder_qty'] ?? null, true, $errors, $lineNumber, 'reappro');
+        $data['stock_quantity'] = $this->parseNumber($data['stock_quantity'] ?? null, false, $errors, $lineNumber, 'stock');
+        $data['min_stock'] = $this->parseNumber($data['min_stock'] ?? null, false, $errors, $lineNumber, 'seuil');
+        $data['reorder_qty'] = $this->parseNumber($data['reorder_qty'] ?? null, false, $errors, $lineNumber, 'reappro');
 
         $data['stock_quantity'] = $data['stock_quantity'] ?? 0;
         $data['min_stock'] = $data['min_stock'] ?? 0;

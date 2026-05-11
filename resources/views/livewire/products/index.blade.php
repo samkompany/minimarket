@@ -133,6 +133,11 @@
                     @error('unit') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="sold_by_weight" wire:model.live="sold_by_weight" class="h-4 w-4 rounded border-slate-300 text-emerald-600" />
+                    <label for="sold_by_weight" class="app-label mb-0 cursor-pointer">Vendu au poids (kg)</label>
+                </div>
+
                 <div>
                     <label class="app-label">SKU</label>
                     <input type="text" wire:model="sku" class="app-input" />
@@ -168,20 +173,20 @@
                 </div>
 
                 <div>
-                    <label class="app-label">Stock initial</label>
-                    <input type="number" min="0" wire:model="stock_quantity" class="app-input" />
+                    <label class="app-label">Stock initial {{ $sold_by_weight ? '(kg)' : '' }}</label>
+                    <input type="number" min="0" step="{{ $sold_by_weight ? '0.001' : '1' }}" wire:model="stock_quantity" class="app-input" />
                     @error('stock_quantity') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label class="app-label">Seuil alerte</label>
-                    <input type="number" min="0" wire:model="min_stock" class="app-input" />
+                    <label class="app-label">Seuil alerte {{ $sold_by_weight ? '(kg)' : '' }}</label>
+                    <input type="number" min="0" step="{{ $sold_by_weight ? '0.001' : '1' }}" wire:model="min_stock" class="app-input" />
                     @error('min_stock') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label class="app-label">Qté reappro</label>
-                    <input type="number" min="0" wire:model="reorder_qty" class="app-input" />
+                    <label class="app-label">Qté reappro {{ $sold_by_weight ? '(kg)' : '' }}</label>
+                    <input type="number" min="0" step="{{ $sold_by_weight ? '0.001' : '1' }}" wire:model="reorder_qty" class="app-input" />
                     @error('reorder_qty') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
